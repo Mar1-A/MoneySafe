@@ -1,75 +1,59 @@
 """
 Author: Marwan Alalloush
 """
+
 import os
 import time
 import utils
 import argparse
 import numpy as np
 import soundfile as sf
-import tensorflow as tf 
+import tensorflow as tf
 import librosa
 from config import args
 from BLSTM import SpeechRecognitionModel, model_modes
+from DBN import DBN
 from lables_preprocess import TextTransform
 
-# tf.compat.v1.logging.set_verbosity(tf.logging.WARN)
-
-# from config import args
-# from lstm import SpeechRecognitionModel, model_modes
-args.input_max_len= 965
+args.input_max_len = 965
 print(args.input_max_len)
-tf.compat.v1.reset_default_graph()  
+tf.compat.v1.reset_default_graph()
+
 def infer():
-
-    # # Creating a command line argument parser
-    # arg_p = argparse.ArgumentParser()
-
-    # # Adding an expected argument
-    # arg_p.add_argument('-af', '--audiofile', required=True, type=str)
-
-    # # Parsing the arguments passed by the user
-    # args = arg_p.parse_args()
-
-    # Creating an inference session
     infer_sess = tf.compat.v1.Session()
     tf.compat.v1.disable_eager_execution()
+    
+    #load dbn model
+    dbn = DBN.load_model('dbn_39.pickle')
 
-    # Creating an inference model
-    model = SpeechRecognitionModel.load('Newfolder/hparams', 'Newfolder/checkpoints-344160', infer_sess, mode = model_modes.INFER)
+    # Load the model
+    model = SpeechRecognitionModel.load('Newfolder/hparams', 'Newfolder/checkpoints-344160', infer_sess, mode=model_modes.INFER)
 
-    # Reading the audio file from the path passed as a command line argument
+    # Load the audio file and compute MFCC features
     audio, sr = librosa.load('audio.wav', sr=22050)
     features = utils.compute_mfcc(audio_data=audio, sample_rate=sr)
-    
-    print(features.shape)
-    # features = features.T
-    # Padding the sequence so that it is the same length as all sequences on which the model was trained
-    # Passing features in [] in order to make it three-dimensional (2D --> 3D)
+
+    # Pad the input features
     features_padded = np.asarray(utils.pad_sequence([features], args.input_max_len), dtype=np.float32)
-    print(features_padded.shape)
+    
+    #creat context window
+    features = utils.context_windows(features_padded)
+    #extract features with dbn
+    features,_ = dbn.dbn_output(features)
+    #reshape data to fit model
+    features = utils.reshap_data(features)
+    # Perform inference
+    decoded = model.infer(features, infer_sess)
 
-    # Setting the start time for decoding
-    start_time = time.time()
-
-    # Performing decoding ---> returns a ...
-    decoded = model.infer(features_padded, infer_sess)
-
-    print(decoded)
-    print('###')
     orginal_text = 'this is a test'
-    # Converting transcription IDs ---> Text
     text_prediction = TextTransform().int_to_text(decoded[0][0].values)
-    print('---> Text predicition length: {}'.format(len(text_prediction)))
 
-
+    # Print results
     print('\n\n###############\nActual Text: {}\nPredicted Text: {}\nTook {} seconds.'.format(orginal_text, text_prediction, time.time()-start_time))
 
-
-
 if __name__ == '__main__':
-
     infer()
+
 # # # !pip install pyaudio
 # import pyaudio
 
