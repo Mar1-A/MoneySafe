@@ -117,8 +117,10 @@ def main(experiment=Experiment(api_key='dummy_key', disabled=True)):
                 # Pad and convert inputs and labels to required format
                 batch_train_inputs = np.asarray(utils.pad_sequence(batch_train_inputs, args.input_max_len), dtype=np.float32)
                 batch_train_labels = utils.sparse_tuple_from(np.asarray(batch_train_labels))
+                 #creat context window
+                batch_train_inputs = utils.context_windows(batch_train_inputs)
                 #extract features with DBN
-                batch_train_labels,_ = dbn.dbn_output(batch_train_labels)
+                batch_train_inputs,_ = dbn.dbn_output(batch_train_inputs)
                 #reshape data to fit model
                 batch_train_inputs = utils.reshap_data(batch_train_inputs)
                 # Train model on batch and get cost and summary
