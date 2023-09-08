@@ -1,12 +1,12 @@
-Telephone Fraud Detection using LSTM-based Speech Recognition: Final Year Project
+#Telephone Fraud Detection using LSTM-based Speech Recognition: Final Year Project
 
-Overview
+##Overview
 
 This repository houses the code and resources related to my final year project, which centers around the use of deep learning to detect and counteract telephone-based fraud. In particular, the project addresses the challenges posed by scam calls in the UK that seek to extract sensitive bank card information. The project employs an LSTM-based neural network model to recognize and transcribe particular key phrases from real-time conversational speech, aiming to identify potential fraudulent activities.
 
-Key Features
+##Key Features
 
-Datasets:
+##Datasets:
 
 Large-vocabulary dataset (LibriSpeech corpus): Used to ensure the model's adaptability across diverse accents and speaking styles.
 
